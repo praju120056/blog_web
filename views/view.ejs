@@ -1,0 +1,88 @@
+<%- include("partials/header.ejs") %>
+    <div class="album py-5 bg-body-tertiary">
+        <div class="container">
+            <article class="blog-post">
+                <h2 class="display-5 link-body-emphasis mb-1">
+                    <%= locals.data.title %>
+                </h2>
+                <p class="blog-post-meta">
+                    <%= new Date(locals.data.createdAt).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %> by <a href="#">Author</a>
+                </p>
+                <p>
+                    <%- locals.data.text %>
+                </p>
+            </article>
+
+            <!-- React Like Button mount point -->
+            <div id="like-root" data-blog-id="<%= locals.data._id %>" data-likes="<%= locals.data.likes %>"></div>
+        </div>
+    </div>
+
+    <%- include("partials/footer.ejs") %>
+
+<!-- React via CDN -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+    const { useState } = React;
+
+    function LikeButton({ blogId, initialLikes }) {
+        const [likes, setLikes] = useState(initialLikes);
+        const [clicked, setClicked] = useState(false);
+        const [loading, setLoading] = useState(false);
+
+        const handleLike = async () => {
+            if (loading) return;
+            setLoading(true);
+            setClicked(true);
+            try {
+                const res = await fetch(`/api/blogs/${blogId}/like`, { method: 'POST' });
+                const data = await res.json();
+                setLikes(data.likes);
+            } catch (err) {
+                console.error('Failed to like:', err);
+            } finally {
+                setLoading(false);
+                setTimeout(() => setClicked(false), 300);
+            }
+        };
+
+        return (
+            <div style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <button
+                    onClick={handleLike}
+                    disabled={loading}
+                    style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        padding: '0.45rem 1.1rem',
+                        borderRadius: '2rem',
+                        border: '1.5px solid #e25555',
+                        background: clicked ? '#e25555' : 'transparent',
+                        color: clicked ? '#fff' : '#e25555',
+                        fontWeight: '600',
+                        fontSize: '0.95rem',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s ease',
+                        transform: clicked ? 'scale(1.08)' : 'scale(1)',
+                    }}
+                >
+                    <span style={{ fontSize: '1.1rem' }}>❤️</span> Like
+                </button>
+                <span style={{ fontSize: '0.95rem', opacity: 0.75 }}>
+                    {likes} {likes === 1 ? 'like' : 'likes'}
+                </span>
+            </div>
+        );
+    }
+
+    const container = document.getElementById('like-root');
+    const blogId = container.dataset.blogId;
+    const initialLikes = parseInt(container.dataset.likes, 10);
+
+    const root = ReactDOM.createRoot(container);
+    root.render(<LikeButton blogId={blogId} initialLikes={initialLikes} />);
+</script>
