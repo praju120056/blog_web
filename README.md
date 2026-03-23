@@ -35,10 +35,10 @@ Blog-Web-App/
 - Node.js v18+
 - MongoDB running locally, or a MongoDB Atlas URI
 
-<<<<<<< HEAD
 ```bash
 git clone https://github.com/praju120056/blog_web.git
 cd Blog-Web-App
+```
 =======
 ## Setup
 
